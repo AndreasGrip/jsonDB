@@ -1,0 +1,12 @@
+{
+  "name": "jsonDB",
+  "version": "1.0.0",
+  "description": "Superfast online db using HTTP. Just a javascript object accessible using GET/POST/PUT/PATCH/DELETE. The native nodejs httpserver is used, so this is pure vanilla nodejs, no import/require.",
+  "main": "jsonDb.js",
+  "scripts": {
+    "start": "node example.js"
+  },
+  "type": "module",
+  "author": "andreas.grip@gmail.com",
+  "license": "ISC"
+}
