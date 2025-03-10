@@ -30,6 +30,25 @@ function validatePort(port) {
   return typeof port === 'number' && isInteger(port) && port > 0 && port < 65536;
 }
 
+function objCopy(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function getParameters(url) {
+  const params = new URLSearchParams(new URL(url).search);
+  let result = {};
+
+  for (let [key, value] of params) {
+      // Make sure the key exists in result before pushing to its array
+      if (!result[key]) result[key] = [];
+      // Split the comma-separated values and add them to the array
+      const values = value.split(',');
+      result[key].push(...values);
+  }
+
+  return result;
+}
+
 export class JsonDb {
   constructor(database, port, ip) {
     this.webserverIp = validateIP(ip) ? ip : '0.0.0.0';
@@ -71,6 +90,10 @@ export class JsonDb {
         responseData.unshift(responseData[0] && responseData[0][pathnameArray[i]]);
       }
 
+      // Use URLSearchParams to manipulate the query parameters
+      let params = getParameters(url);
+
+
       // data sent with request
       let data = [];
 
@@ -93,7 +116,23 @@ export class JsonDb {
           switch (req.method) {
             case 'GET':
               if (responseData[0] !== null && typeof responseData[0] === 'object') {
-                res.write(JSON.stringify(responseData[0]));
+                if(params.show && Array.isArray(params.show)) {
+                  const responseDataCopy = objCopy(responseData[0])
+
+                  Object.keys(responseDataCopy).forEach((key) => {
+                    // If an array we want to filter each context
+                    if(Array.isArray(responseDataCopy)) {
+                      Object.keys(responseDataCopy[key]).forEach((subKey) => {
+                        if(!params.show.includes(subKey)) responseDataCopy[key][subKey] = undefined;
+                      })
+                    } else {
+                      if(!params.show.includes(key)) responseDataCopy[key] = undefined;
+                    }
+                  });
+                  res.write(JSON.stringify(responseDataCopy));
+                } else {
+                  res.write(JSON.stringify(responseData[0]));
+                }
               } else {
                 res.setHeader('Content-Type', 'text/plain');
                 res.write(responseData[0]);
