@@ -1,12 +1,12 @@
 ## JSON DB
 
 This is in fact a javascript object that is available and changeable from the web using rest. It can be used to share status, config, data or hearbeat between programs/services,
-Being written in vanilla javascript it's lighning fast and dont require any modules
+Being written in vanilla javascript it's lightning fast and don't require any modules
 
 Here are the definition of the http requests.
 
-GET - Reciving a signle or multiple resources
-POST - Create a new reseource - Never overwrites, adds to arrays create new objects/elements if they are not present before. Return error 409 (conflict) if already existing.
+GET - Receiving a signle or multiple resources
+POST - Create a new resource - Never overwrites, adds to arrays create new objects/elements if they are not present before. Return error 409 (conflict) if already existing.
 PUT - Create or Update a resource (overwrite unlike PATCH)
 DELETE - Delete a resource.
 PATCH - Update an existing objects. Return 409 (conflict) if trying to "merge" object of different types, like a number to a object.
@@ -27,7 +27,6 @@ curl 127.0.0.1:3030 will now return {"name":"Linux","type":"OS","mascot":{"name"
 curl -X 'DELETE' 127.0.0.1:3030/mascot
 curl 127.0.0.1:3030 will now return {"name":"Linux","type":"OS","users":"Griffin"}
 
-
 Getting only selected data back
 From the example server is running on 127.0.0.1, listen to port 3030 and the database/object is as follows.
 {name:"Linux", type:"OS", mascot: {name:'tux', owner:"Linus", spicies:'Penguin'}, users:[{"name":"John", type:"user"}, {"name":"Jane", type:"user"}, {"name":"Linus", type:"Admin"},{"name":"Donald", type:"Duck"}]}
@@ -36,5 +35,5 @@ For Arrays each object in the array will be handled
 
 curl 127.0.0.1:3030?show=name will return {"name":"Linux"}
 curl 127.0.0.1:3030/users?show=name will return [{"name":"John"},{"name":"Jane"},{"name":"Linus"},{"name":"Donald"}]
-curl 127.0.0.1:3030?show=name,users will return {"name":"Jane","type":"user"},{"name":"Linus","type":"Admin"},{"name":"Donald","type":"Duck"}]}
-curl 127.0.0.1:3030/?show=name&show=users will return {"name":"Jane","type":"user"},{"name":"Linus","type":"Admin"},{"name":"Donald","type":"Duck"}]}
+curl 127.0.0.1:3030?show=name,users will return {"name":"Linux","users":[{"name":"John","type":"user"},{"name":"Jane","type":"user"},{"name":"Linus","type":"Admin"},{"name":"Donald","type":"Duck"}]}
+curl 127.0.0.1:3030/?show=name&show=users will return {"name":"Linux","users":[{"name":"John","type":"user"},{"name":"Jane","type":"user"},{"name":"Linus","type":"Admin"},{"name":"Donald","type":"Duck"}]}
