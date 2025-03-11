@@ -1,7 +1,7 @@
 //const http = require('http');
 import * as http from 'http';
 
-const textContentTypes = ['application/json', 'text/plain', 'application/x-www-form-urlencoded']
+const textContentTypes = ['application/json', 'text/plain', 'application/x-www-form-urlencoded'];
 
 function isObject(data) {
   return typeof data === 'object' && !Array.isArray(data) && data !== null;
@@ -39,11 +39,11 @@ function getParameters(url) {
   let result = {};
 
   for (let [key, value] of params) {
-      // Make sure the key exists in result before pushing to its array
-      if (!result[key]) result[key] = [];
-      // Split the comma-separated values and add them to the array
-      const values = value.split(',');
-      result[key].push(...values);
+    // Make sure the key exists in result before pushing to its array
+    if (!result[key]) result[key] = [];
+    // Split the comma-separated values and add them to the array
+    const values = value.split(',');
+    result[key].push(...values);
   }
 
   return result;
@@ -68,7 +68,10 @@ export class JsonDb {
       const url = new URL('http://' + req.headers.host + req.url);
 
       // Remove leading and trailing slash then split by slash. Remove '' as those are double filters
-      const pathnameArray = url.pathname.split('/').filter((e) => e !== '').map(e => decodeURI(e));
+      const pathnameArray = url.pathname
+        .split('/')
+        .filter((e) => e !== '')
+        .map((e) => decodeURI(e));
       const responseData = [];
       responseData.push(this.db);
 
@@ -93,7 +96,6 @@ export class JsonDb {
       // Use URLSearchParams to manipulate the query parameters
       let params = getParameters(url);
 
-
       // data sent with request
       let data = [];
 
@@ -116,19 +118,54 @@ export class JsonDb {
           switch (req.method) {
             case 'GET':
               if (responseData[0] !== null && typeof responseData[0] === 'object') {
-                if(params.show && Array.isArray(params.show)) {
-                  const responseDataCopy = objCopy(responseData[0])
+                const paramKeys = Object.keys(params);
 
-                  Object.keys(responseDataCopy).forEach((key) => {
-                    // If an array we want to filter each context
-                    if(Array.isArray(responseDataCopy)) {
-                      Object.keys(responseDataCopy[key]).forEach((subKey) => {
-                        if(!params.show.includes(subKey)) responseDataCopy[key][subKey] = undefined;
-                      })
-                    } else {
-                      if(!params.show.includes(key)) responseDataCopy[key] = undefined;
+                // if there is paramKeys there is filters to be applied, otherwise just return the full object
+                if (paramKeys.length > 0) {
+                  // this is what will be returned
+                  const responseDataCopy = Array.isArray(responseData[0]) ? [] : {};
+
+                  // for each element in returned data
+                  Object.keys(responseData[0]).forEach((objKey) => {
+                    // the object to be considered to be returned
+                    const curObj = responseData[0][objKey];
+
+                    // all params that are not 'show' are filterparams
+                    const paramKeysFilters = paramKeys.filter((k) => k !== 'show');
+
+                    // if there is no filters we should copy (return)
+                    let copy = paramKeysFilters.length === 0;
+                    // if there are filters copy will be false and we going to check if any of the required params are missing
+                    if (!copy) {
+                      // return true if there is missing match for anny of the parameters
+                      copy = paramKeysFilters.every((param) => {
+                        // return true if there is no match for this parameter
+                        return params[param].includes(curObj[param]);
+                      });
+                    }
+                    if (copy) {
+                      // add to the responseDataCopy object in a proper way according to it's type
+                      if (Array.isArray(responseDataCopy)) {
+                        responseDataCopy.push(objCopy(curObj));
+                      } else {
+                        responseDataCopy[objKey] = objCopy(curObj);
+                      }
                     }
                   });
+
+                  // if param show is set remove other stuff
+                  if (params.show && Array.isArray(params.show)) {
+                    Object.keys(responseDataCopy).forEach((key) => {
+                      // If an array we want to filter each context
+                      if (Array.isArray(responseDataCopy)) {
+                        Object.keys(responseDataCopy[key]).forEach((subKey) => {
+                          if (!params.show.includes(subKey)) responseDataCopy[key][subKey] = undefined;
+                        });
+                      } else {
+                        if (!params.show.includes(key)) responseDataCopy[key] = undefined;
+                      }
+                    });
+                  }
                   res.write(JSON.stringify(responseDataCopy));
                 } else {
                   res.write(JSON.stringify(responseData[0]));
@@ -158,7 +195,7 @@ export class JsonDb {
                 }
               }
               break;
-            case 'PUT': 
+            case 'PUT':
               responseData[1][pathnameArray[pathnameArray.length - 1]] = data;
               break;
             case 'PATCH':
@@ -183,6 +220,6 @@ export class JsonDb {
       });
     });
     console.log(`Listening on ${this.webserverIp}:${this.webserverPort}`);
-    this.httpServer.listen(this.webserverPort, this.webserverIp)
+    this.httpServer.listen(this.webserverPort, this.webserverIp);
   }
 }
